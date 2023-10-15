@@ -112,6 +112,7 @@ class MapSampleState extends State<MapSample> {
           onCameraIdle: _manager.updateMap),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
+          _manager.updateClusteringAlgorithm(algorithm: ClusterAlgorithm.NONE);
           _manager.setItems(<Place>[
             for (int i = 0; i < 30; i++)
               Place(

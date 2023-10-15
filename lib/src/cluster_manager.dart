@@ -44,7 +44,7 @@ class ClusterManager<T extends ClusterItem> {
   final double extraPercent;
 
   // Clusteringalgorithm
-  final ClusterAlgorithm clusterAlgorithm;
+  ClusterAlgorithm clusterAlgorithm;
 
   final MaxDistParams? maxDistParams;
 
@@ -103,11 +103,19 @@ class ClusterManager<T extends ClusterItem> {
   }
 
   /// Method called on camera move
-  void onCameraMove(CameraPosition position, {forceUpdate = false}) {
+  void onCameraMove(CameraPosition position, {bool forceUpdate = false}) {
     _zoom = position.zoom;
     if (forceUpdate) {
       updateMap();
     }
+  }
+
+
+  void updateClusteringAlgorithm({required ClusterAlgorithm algorithm, bool forceUpdate = false}) {
+      clusterAlgorithm = algorithm;
+      if (forceUpdate) {
+        updateMap();
+      }
   }
 
   /// Retrieve cluster markers
