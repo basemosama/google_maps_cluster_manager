@@ -64,6 +64,13 @@ class MapSampleState extends State<MapSample> {
       Place(
           name: 'Test2 $i',
           latLng: LatLng(-36.848461 + i * 1, 169.763336 + i * 1)),
+    Place(name: 'Test3', latLng: LatLng(21.502775, 39.182127)),
+    Place(name: 'Test4', latLng: LatLng(24.646447, 46.857068)),
+    Place(name: 'Test5', latLng: LatLng(24.760082, 46.672777)),
+    Place(name: 'Test6', latLng: LatLng(24.760082, 46.672777)),
+    Place(name: 'Test7', latLng: LatLng(24.760082, 46.672777)),
+    Place(name: 'Test6', latLng: LatLng(0, 0)),
+    Place(name: 'Test6', latLng: LatLng(0, 0)),
   ];
 
   @override
@@ -73,11 +80,14 @@ class MapSampleState extends State<MapSample> {
   }
 
   ClusterManager _initClusterManager() {
-    return ClusterManager<Place>(items, _updateMarkers,
-        markerBuilder: _markerBuilder,
-        clusterAlgorithm: ClusterAlgorithm.NONE,
-        showOnlyVisibleNoneClusteringItems: (visibleItemsLength, itemsLength) =>
-            false);
+    return ClusterManager<Place>(
+      items,
+      _updateMarkers,
+      markerBuilder: _markerBuilder,
+      clusterAlgorithm: ClusterAlgorithm.MAX_DIST,
+      showOnlyVisibleItems: (visibleItemsLength, itemsLength, zoomLevel) =>
+          false,
+    );
   }
 
   void _updateMarkers(Set<Marker> markers) {

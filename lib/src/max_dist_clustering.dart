@@ -30,16 +30,29 @@ class MaxDistClustering<T extends ClusterItem> {
     //initial variables
     List<List<double>> distMatrix = [];
     for (T entry1 in dataset) {
-      distMatrix.add([]);
-      _cluster.add(Cluster.fromItems([entry1]));
+      final clusterIndex = _cluster.indexWhere((element) => element.location == entry1.location);
+      if(clusterIndex == -1){
+        distMatrix.add([]);
+        _cluster.add(Cluster.fromItems([entry1]));
+      }else{
+        final cluster =_cluster[clusterIndex];
+
+        final _newCluster= Cluster.fromItems([...cluster.items, entry1]);
+        _cluster.remove(cluster);
+        _cluster.add(_newCluster);
+
+      }
     }
+
+
+
     bool changed = true;
     while (changed) {
       changed = false;
       for (Cluster<T> c in _cluster) {
         _MinDistCluster<T>? minDistCluster = getClosestCluster(c, zoomLevel);
-        // print("mindistcluster ${minDistCluster?.dist}");
         if (minDistCluster == null || minDistCluster.dist > epsilon) continue;
+
         _cluster.add(Cluster.fromClusters(minDistCluster.cluster, c));
         _cluster.remove(c);
         _cluster.remove(minDistCluster.cluster);
@@ -50,6 +63,8 @@ class MaxDistClustering<T extends ClusterItem> {
     }
     return _cluster;
   }
+
+
 
   _MinDistCluster<T>? getClosestCluster(Cluster cluster, int zoomLevel) {
     double minDist = 1000000000;

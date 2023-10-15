@@ -23,7 +23,7 @@ class ClusterManager<T extends ClusterItem> {
       this.maxItemsForMaxDistAlgo = 200,
       this.clusterAlgorithm = ClusterAlgorithm.GEOHASH,
       this.maxDistParams,
-      this.showOnlyVisibleNoneClusteringItems,
+      this.showOnlyVisibleItems,
       this.stopClusteringZoom})
       : this.markerBuilder = markerBuilder ?? _basicMarkerBuilder,
         assert(levels.length <= precision);
@@ -51,8 +51,8 @@ class ClusterManager<T extends ClusterItem> {
   /// Zoom level to stop cluster rendering
   final double? stopClusteringZoom;
 
-  /// Shows only visible markers when using [ClusterAlgorithm.NONE].
-  final bool Function(int visibleItemsLength, int itemsLength)? showOnlyVisibleNoneClusteringItems;
+  /// Shows markers which are visible in map boundaries that are visible to the user.
+  final bool Function(int visibleItemsLength, int itemsLength, double zoomLevel)? showOnlyVisibleItems;
 
   /// Precision of the geohash
   static final int precision = kIsWeb ? 12 : 20;
@@ -128,27 +128,27 @@ class ClusterManager<T extends ClusterItem> {
       return inflatedBounds.contains(i.location);
     }).toList();
 
+
+    final clusterItems =( showOnlyVisibleItems?.call(visibleItems.length, items.length, _zoom) ?? true) ?visibleItems.toList() :items.toList();
+
     if(clusterAlgorithm == ClusterAlgorithm.NONE){
-      if(showOnlyVisibleNoneClusteringItems?.call(visibleItems.length, items.length) ?? true){
-        return visibleItems.map((i) => Cluster<T>.fromItems([i])).toList();
-      }
-      return items.map((i) => Cluster<T>.fromItems([i])).toList();
+      return clusterItems.map((i) => Cluster<T>.fromItems([i])).toList();
     }
 
 
     if (stopClusteringZoom != null && _zoom >= stopClusteringZoom! )
-      return visibleItems.map((i) => Cluster<T>.fromItems([i])).toList();
+      return clusterItems.map((i) => Cluster<T>.fromItems([i])).toList();
 
     if (clusterAlgorithm == ClusterAlgorithm.GEOHASH ||
-        visibleItems.length >= maxItemsForMaxDistAlgo) {
+        clusterItems.length >= maxItemsForMaxDistAlgo) {
       int level = _findLevel(levels);
       List<Cluster<T>> markers = _computeClusters(
-          visibleItems, List.empty(growable: true),
+          clusterItems, List.empty(growable: true),
           level: level);
       return markers;
     } else {
       List<Cluster<T>> markers =
-          _computeClustersWithMaxDist(visibleItems, _zoom);
+          _computeClustersWithMaxDist(clusterItems, _zoom);
       return markers;
     }
   }
@@ -225,6 +225,8 @@ class ClusterManager<T extends ClusterItem> {
 
     return _computeClusters(newInputList, markerItems, level: level);
   }
+
+
 
   static Future<Marker> Function(Cluster) get _basicMarkerBuilder =>
       (cluster) async {
