@@ -128,9 +128,9 @@ class MapSampleState extends State<MapSample> {
     );
   }
 
-  Future<Marker> Function(Cluster<Place>) _getMarkerBuilder(Color color) =>
+  Future<Set<Marker>> Function(Cluster<Place>) _getMarkerBuilder(Color color) =>
       (cluster) async {
-        return Marker(
+        return {Marker(
           markerId: MarkerId(cluster.getId()),
           position: cluster.location,
           onTap: () {
@@ -139,7 +139,7 @@ class MapSampleState extends State<MapSample> {
           },
           icon: await _getMarkerBitmap(cluster.isMultiple ? 125 : 75, color,
               text: cluster.isMultiple ? cluster.count.toString() : null),
-        );
+        )};
       };
 
   Future<BitmapDescriptor> _getMarkerBitmap(int size, Color color,

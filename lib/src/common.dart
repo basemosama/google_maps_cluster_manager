@@ -1,9 +1,7 @@
 import 'dart:math';
-import 'dart:ui';
 
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
 
-import 'cluster.dart';
 
 const int _mio = 1000000;
 const int _thd = 1000;
@@ -130,3 +128,31 @@ class DistUtils {
     }
   }
 }
+
+
+
+
+extension RIterable<T> on Iterable<T> {
+
+  Future<List<S>> asyncMap<S>(
+      Future<S> Function(T e) action,
+      ) async {
+    final list = <S>[];
+    for (final item in this) {
+      list.add(await action(item));
+    }
+    return list;
+  }
+
+}
+
+extension FlattenMultipleListExtensions<T> on Iterable<Iterable<T>> {
+
+  List<T> flatten() =>
+      [for (var sublist in this) ...sublist];
+
+  Iterable<X> flatMap<X>( X Function(T) f) => flatten().map(f);
+
+}
+
+

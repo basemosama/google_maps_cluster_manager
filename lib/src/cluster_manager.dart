@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_cluster_manager/google_maps_cluster_manager.dart';
+import 'package:google_maps_cluster_manager/src/common.dart';
 import 'package:google_maps_cluster_manager/src/max_dist_clustering.dart';
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
 
@@ -17,7 +18,7 @@ class MaxDistParams {
 
 class ClusterManager<T extends ClusterItem> {
   ClusterManager(this._items, this.updateMarkers,
-      {Future<Marker> Function(Cluster<T>)? markerBuilder,
+      {Future<Set<Marker>> Function(Cluster<T>)? markerBuilder,
       this.levels = const [1, 4.25, 6.75, 8.25, 11.5, 14.5, 16.0, 16.5, 20.0],
       this.extraPercent = 0.5,
       this.maxItemsForMaxDistAlgo = 200,
@@ -29,7 +30,7 @@ class ClusterManager<T extends ClusterItem> {
         assert(levels.length <= precision);
 
   /// Method to build markers
-  final Future<Marker> Function(Cluster<T>) markerBuilder;
+  final Future<Set<Marker>> Function(Cluster<T>) markerBuilder;
 
   // Num of Items to switch from MAX_DIST algo to GEOHASH
   final int maxItemsForMaxDistAlgo;
@@ -84,10 +85,8 @@ class ClusterManager<T extends ClusterItem> {
   void _updateClusters() async {
     List<Cluster<T>> mapMarkers = await getMarkers();
 
-    final Set<Marker> markers =
-        Set.from(await Future.wait(mapMarkers.map((m) => markerBuilder(m))));
-
-    updateMarkers(markers);
+    final markers= await mapMarkers.asyncMap((m) => markerBuilder(m));
+    updateMarkers(markers.flatten().toSet());
   }
 
   /// Update all cluster items
@@ -236,9 +235,9 @@ class ClusterManager<T extends ClusterItem> {
 
 
 
-  static Future<Marker> Function(Cluster) get _basicMarkerBuilder =>
+  static Future<Set<Marker>> Function(Cluster) get _basicMarkerBuilder =>
       (cluster) async {
-        return Marker(
+        return {Marker(
           markerId: MarkerId(cluster.getId()),
           position: cluster.location,
           onTap: () {
@@ -246,7 +245,7 @@ class ClusterManager<T extends ClusterItem> {
           },
           icon: await _getBasicClusterBitmap(cluster.isMultiple ? 125 : 75,
               text: cluster.isMultiple ? cluster.count.toString() : null),
-        );
+        )};
       };
 
   static Future<BitmapDescriptor> _getBasicClusterBitmap(int size,
