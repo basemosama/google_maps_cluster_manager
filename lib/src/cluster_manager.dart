@@ -1,5 +1,4 @@
 import 'dart:math';
-import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
@@ -8,7 +7,7 @@ import 'package:google_maps_cluster_manager/google_maps_cluster_manager.dart';
 import 'package:google_maps_cluster_manager/src/max_dist_clustering.dart';
 import 'package:google_maps_flutter_platform_interface/google_maps_flutter_platform_interface.dart';
 
-enum ClusterAlgorithm { GEOHASH, MAX_DIST }
+enum ClusterAlgorithm { GEOHASH, MAX_DIST, NONE }
 
 class MaxDistParams {
   final double epsilon;
@@ -24,6 +23,7 @@ class ClusterManager<T extends ClusterItem> {
       this.maxItemsForMaxDistAlgo = 200,
       this.clusterAlgorithm = ClusterAlgorithm.GEOHASH,
       this.maxDistParams,
+      this.showOnlyVisibleNoneClusteringItems,
       this.stopClusteringZoom})
       : this.markerBuilder = markerBuilder ?? _basicMarkerBuilder,
         assert(levels.length <= precision);
@@ -50,6 +50,9 @@ class ClusterManager<T extends ClusterItem> {
 
   /// Zoom level to stop cluster rendering
   final double? stopClusteringZoom;
+
+  /// Shows only visible markers when using [ClusterAlgorithm.NONE].
+  final bool Function(int visibleItemsLength, int itemsLength)? showOnlyVisibleNoneClusteringItems;
 
   /// Precision of the geohash
   static final int precision = kIsWeb ? 12 : 20;
@@ -125,7 +128,15 @@ class ClusterManager<T extends ClusterItem> {
       return inflatedBounds.contains(i.location);
     }).toList();
 
-    if (stopClusteringZoom != null && _zoom >= stopClusteringZoom!)
+    if(clusterAlgorithm == ClusterAlgorithm.NONE){
+      if(showOnlyVisibleNoneClusteringItems?.call(visibleItems.length, items.length) ?? true){
+        return visibleItems.map((i) => Cluster<T>.fromItems([i])).toList();
+      }
+      return items.map((i) => Cluster<T>.fromItems([i])).toList();
+    }
+
+
+    if (stopClusteringZoom != null && _zoom >= stopClusteringZoom! )
       return visibleItems.map((i) => Cluster<T>.fromItems([i])).toList();
 
     if (clusterAlgorithm == ClusterAlgorithm.GEOHASH ||

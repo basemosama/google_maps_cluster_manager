@@ -74,7 +74,10 @@ class MapSampleState extends State<MapSample> {
 
   ClusterManager _initClusterManager() {
     return ClusterManager<Place>(items, _updateMarkers,
-        markerBuilder: _markerBuilder);
+        markerBuilder: _markerBuilder,
+        clusterAlgorithm: ClusterAlgorithm.NONE,
+        showOnlyVisibleNoneClusteringItems: (visibleItemsLength, itemsLength) =>
+            false);
   }
 
   void _updateMarkers(Set<Marker> markers) {
